@@ -25,7 +25,7 @@
 
             //let coordinate = d3.select('#coordinate');
 
-            let plot = createPolarPlot(svg, 512, 512)
+            let plot = createPolarPlot(svg, {})
                 .click(
                     function( star, index, selection ) {
                         info.html( JSON.stringify( star, null, '<br>') );
@@ -39,7 +39,7 @@
                 // )
             
             let timer = d3.interval( function(elapsed) {
-                plot.addBlip('spiral', elapsed*0.01, elapsed*0.036, elapsed*0.1);
+                plot.addBlip('spiral', elapsed*0.01, elapsed*0.036, elapsed*0.01);
                 if(elapsed>10000)
                     timer.stop();
             }, 500);

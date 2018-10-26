@@ -1,38 +1,55 @@
 
-/** Factory method which returns a polar plot component */
-let createPolarPlot = function ( svg, width, height ) {
-    //maxRange?
-    // angle conversion factor?
-    // range conversion factor?
-    let radius = Math.min(width, height) / 2.0;
+// TODO add headings and rings? radar polygons? Ameobas?
+// TODO add heading vector on the blip?
 
-    let mScale = d3.scaleLinear()
-        .domain([-128, 127])
-        .range([1,10])
-        // our measurements expressed as a decimal logarithm
-    //TODO should size or color be tied to the data? both?
+/** Factory method which returns a polar plot component
+ * @param {number} args.centerx - Horizontal screen position of plot origin
+ * @param {number} args.centery - Vertical screen position of plot origin
+ * @param {number} args.radius - radius of plot in pixels
+ * @param {D3 continuous scale} args.ranges
+*/
+let createPolarPlot = function ( svg, parameters ) {
+
+    // initialized with defaults, then overwrite with user arguments
+    let args = {
+        centerx: 250,
+        centery: 250,
+        radius: 250,
+        maxRange: 256,
+        turn: 360,
+        maxBlip: 10,
+        minPower: -128,
+        maxPower: 127,
+    };
+    Object.assign(args, parameters);
+
+    // create scales for the plot axis
+    let ranges = d3.scaleLinear()
+        .domain([0, args.maxRange])
+        .range([0, args.radius])
+        .clamp(true);
+    let angles = d3.scaleLinear()
+        .domain([0,args.turn])
+        .range([0,2*Math.PI])
+        .clamp(false);
+    let powers = d3.scaleSqrt()
+        .domain([args.minPower, args.maxPower])
+        .range([0,args.maxBlip])
+        .clamp(true);
     
-    let rScale = d3.scaleSqrt()//scaleLinear()
-        .domain([0,256])
-        .range([0, radius]);
-        // a typical range
-
-    let aScale = d3.scaleLinear()
-        .domain([0,360])
-        .range([0, 2*Math.PI]);
-        // our input is in degrees
-
     let grid = svg.append('g').classed('grid', true)
         .selectAll('path');
 
     let blips = svg.append('g').classed('blips', true)
         .selectAll('circle');
 
-    let data = [];
-    //TODO add headings and rings? radar polygons? Ameobas?
-
     let clicked = function(blip, index, selection){}; // default blip click handler
+    let getRange = function(d){return d.range;}; // range in screen units
+    let getAngle = function(d){return d.angle;}; // angle in radians, with angle zero in the [0, -1] screen direction
+    let getPower = function(d){return d.power;}; // blip diameter in screen units
 
+    let data = [];
+    
     /** redraw the polar plot in the selected SVG */
     let plot = function() {
         blips = blips.data( data );
@@ -43,13 +60,13 @@ let createPolarPlot = function ( svg, width, height ) {
                 .attr('class', function(d){return d.class;} )
                 .on('click', clicked)
             .merge(blips)
-                .attr('r', function(d){return mScale(d.mag);} )
+                .attr('r', function(d){return powers(getPower(d));} )
                 .each( function(d) {
-                    let r = rScale(d.range);
-                    let a = aScale(d.angle);
+                    let r = ranges(getRange(d));
+                    let a = angles(getAngle(d));
                     d3.select(this)
-                        .attr('cx', radius + r * Math.cos(a))
-                        .attr('cy', radius + r * Math.sin(a));
+                        .attr('cx', args.centerx + r * Math.cos(a))
+                        .attr('cy', args.centery + r * Math.sin(a));
                 });
     }
 
@@ -59,17 +76,18 @@ let createPolarPlot = function ( svg, width, height ) {
     }
 
     /** Adds a blip to the display using only the required fields. */
-    plot.addBlip = function( classy, range, angle, mag ) {
+    plot.addBlip = function( classy, range, angle, power ) {
         let blip = {
+            class: classy,
             range: range,
             angle: angle,
-            class: classy,
-            mag: mag,
+            power: power,
         };
         console.log(blip);
         data.push(blip);
         plot();
         return plot;
+        // update bounds of the ranges or powers scales?
     }
 
     // TODO
