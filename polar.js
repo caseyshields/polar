@@ -12,8 +12,7 @@ let createPolarPlot = function ( svg, parameters ) {
 
     // initialized with defaults, then overwrite with user arguments
     let args = {
-        centerx: 250,
-        centery: 250,
+        center: [250,250],
         radius: 250,
         maxRange: 256,
         turn: 360,
@@ -49,7 +48,7 @@ let createPolarPlot = function ( svg, parameters ) {
     let getPower = function(d){return d.power;}; // blip diameter in screen units
 
     let data = [];
-    
+
     /** redraw the polar plot in the selected SVG */
     let plot = function() {
         blips = blips.data( data );
@@ -65,13 +64,23 @@ let createPolarPlot = function ( svg, parameters ) {
                     let r = ranges(getRange(d));
                     let a = angles(getAngle(d));
                     d3.select(this)
-                        .attr('cx', args.centerx + r * Math.cos(a))
-                        .attr('cy', args.centery + r * Math.sin(a));
+                        .attr('cx', args.center[0] + r * Math.cos(a))
+                        .attr('cy', args.center[1] + r * Math.sin(a));
                 });
+    }
+
+    let drawGrid = new function() {
+        // update the grid svg
     }
 
     plot.click = function( callback ) {
         clicked = callback;
+        return plot;
+    }
+
+    plot.center = function( point ) {
+        args.center = point;
+        plot();
         return plot;
     }
 
