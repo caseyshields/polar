@@ -19,6 +19,9 @@ let createPolarPlot = function ( svg, parameters ) {
         maxBlip: 10,
         minPower: -128,
         maxPower: 127,
+        rangeTicks: 4,
+        angleTicks: 8,
+        angleOffset: -Math.PI,
     };
     Object.assign(args, parameters);
 
@@ -29,7 +32,7 @@ let createPolarPlot = function ( svg, parameters ) {
         .clamp(true);
     let angles = d3.scaleLinear()
         .domain([0,args.turn])
-        .range([0,2*Math.PI])
+        .range([ args.angleOffset/2.0, 2*Math.PI + args.angleOffset/2.0 ])
         .clamp(false);
     let powers = d3.scaleSqrt()
         .domain([args.minPower, args.maxPower])
@@ -55,12 +58,18 @@ let createPolarPlot = function ( svg, parameters ) {
     let clicked = function(blip, index, selection){}; // this will be added to individual blips on the update phase
     let moved = function(){};
     svg.on('mousemove', moved);
+    // TODO add a mouse wheel event that changes the range axis?
 
     // array of polar plot blips
     let data = [];
 
     /** redraw the polar plot in the selected SVG */
     let plot = function() {
+        plot.drawBlips();
+        plot.drawGrid(args.rangeTicks, args.angleTicks);
+    }
+
+    plot.drawBlips = function() {
         blips = blips.data( data );
         blips.exit()
                 .remove();
@@ -77,10 +86,9 @@ let createPolarPlot = function ( svg, parameters ) {
                         .attr('cx', args.center[0] + r * Math.cos(a))
                         .attr('cy', args.center[1] + r * Math.sin(a));
                 });
-        drawGrid(4, 8);
     }
 
-    let drawGrid = function(n,m) {
+    plot.drawGrid = function(n,m) {
         // derive incremental range distances
         let distances = [];
         let dn = ranges.domain()[1] / n;
@@ -142,7 +150,7 @@ let createPolarPlot = function ( svg, parameters ) {
             angle: angle,
             power: power,
         };
-        console.log(blip);
+        // console.log(blip);
         data.push(blip);
         plot();
         return plot;
