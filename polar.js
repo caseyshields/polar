@@ -46,11 +46,17 @@ let createPolarPlot = function ( svg, parameters ) {
     let blips = svg.append('g').classed('blips', true)
         .selectAll('circle');
 
-    let clicked = function(blip, index, selection){}; // default blip click handler
+    // default data accessors
     let getRange = function(d){return d.range;}; // range in screen units
     let getAngle = function(d){return d.angle;}; // angle in radians, with angle zero in the [0, -1] screen direction
     let getPower = function(d){return d.power;}; // blip diameter in screen units
 
+    // default event handlers
+    let clicked = function(blip, index, selection){}; // this will be added to individual blips on the update phase
+    let moved = function(){};
+    svg.on('mousemove', moved);
+
+    // array of polar plot blips
     let data = [];
 
     /** redraw the polar plot in the selected SVG */
@@ -114,6 +120,11 @@ let createPolarPlot = function ( svg, parameters ) {
 
     plot.click = function( callback ) {
         clicked = callback;
+        return plot;
+    }
+
+    plot.move = function( callback ) {
+        moved = callback;
         return plot;
     }
 

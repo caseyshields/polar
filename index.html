@@ -4,8 +4,14 @@
         <meta charset="utf-8">
         <title>Polar Plot Component</title>
         <style>
-            circle .spiral {
+            body {
+                background-color: black;
+                color: white;
+            }
+            circle.spiral {
                 fill:red;
+                stroke: none;
+
             }
             g.raxis, g.aaxis {
                 fill: none;
@@ -17,8 +23,8 @@
     <body>
         <section>
             <h1 id="title">Polar Plot Example</h1>
-            <h3 id="coordinate"> </h3>
             <svg width="512" height="512"></svg>
+            <h3 id="info"> </h3>
         </section>
         
         <script src="https://d3js.org/d3.v5.js"></script>
@@ -27,21 +33,19 @@
             let svg = d3.select('svg');
             let width = svg.attr("width");
             let height = svg.attr("height");
-
-            //let coordinate = d3.select('#coordinate');
+            let info = d3.select('#info');
 
             let plot = createPolarPlot(svg, {})
-                .click(
-                    function( star, index, selection ) {
-                        info.html( JSON.stringify( star, null, '<br>') );
-                    }
-                )
-                // .move(
-                //     function( point ) {
-                //         let map = starmap.screenToPolar(point);
-                //         coordinate.html( JSON.stringify( map ) );
-                //     }
-                // )
+                .click( function( blip, index, selection ) {
+                        info.html( JSON.stringify( blip, null, '<br>') );
+                } )
+                .move( function() {
+                    console.log('movement');
+                    let point = d3.mouse(this);
+                    console.log( point );
+                    // let map = starmap.screen2polar(point);
+                    // coordinate.html( JSON.stringify( map ) );
+                } );
             
             let timer = d3.interval( function(elapsed) {
                 plot.addBlip('spiral', elapsed*0.01, elapsed*0.036, elapsed*0.01);
