@@ -36,8 +36,12 @@ let createPolarPlot = function ( svg, parameters ) {
         .range([0,args.maxBlip])
         .clamp(true);
     
-    let grid = svg.append('g').classed('grid', true)
-        .selectAll('path');
+    let raxis = svg.append('g')
+        .classed('raxis', true)
+        .selectAll('circle');
+    let aaxis = svg.append('g')
+        .classed('aaxis', true)
+        .selectAll('line');
 
     let blips = svg.append('g').classed('blips', true)
         .selectAll('circle');
@@ -67,10 +71,45 @@ let createPolarPlot = function ( svg, parameters ) {
                         .attr('cx', args.center[0] + r * Math.cos(a))
                         .attr('cy', args.center[1] + r * Math.sin(a));
                 });
+        drawGrid(4, 8);
     }
 
-    let drawGrid = new function() {
-        // update the grid svg
+    let drawGrid = function(n,m) {
+        // derive incremental range distances
+        let distances = [];
+        let dn = ranges.domain()[1] / n;
+        for (let i=1; i<=n; i++)
+            distances.push( i*dn );
+        // let ticks = ranges.ticks(n).slice(1);
+
+        raxis = raxis.data(distances);
+        raxis.exit().remove();
+        raxis = raxis.enter()
+            .append('circle')
+            .merge( raxis )
+                .attr('cx', args.center[0])
+                .attr('cy', args.center[1])
+                .attr('r', function(d){return ranges(d);});
+        
+        // also mark headings
+        let headings = [];
+        let dm = args.turn/m;
+        for (let j=0; j<m; j++)
+            headings.push( [Math.cos(angles(j*dm)), Math.sin(angles(j*dm))] );
+        // let headings = angles.ticks(m-1)
+        //     .map( function(t){return [Math.cos(t), Math.sin(t)];} );
+        
+        let Rmin = ranges(distances[0]);
+        let Rmax = ranges(distances[n-1]);
+        aaxis = aaxis.data( headings );
+        aaxis.exit().remove();
+        aaxis = aaxis.enter()
+            .append('line')
+            .merge(aaxis)
+                .attr('x1', function(d){return Rmin*d[0]+args.center[0];})
+                .attr('x2', function(d){return Rmax*d[0]+args.center[0];})
+                .attr('y1', function(d){return Rmin*d[1]+args.center[1];})
+                .attr('y2', function(d){return Rmax*d[1]+args.center[1];})
     }
 
     plot.click = function( callback ) {

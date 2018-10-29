@@ -7,6 +7,11 @@
             circle .spiral {
                 fill:red;
             }
+            g.raxis, g.aaxis {
+                fill: none;
+                stroke: green;
+                stroke-width: 2;
+            }
         </style>
     </head>
     <body>
@@ -40,7 +45,7 @@
             
             let timer = d3.interval( function(elapsed) {
                 plot.addBlip('spiral', elapsed*0.01, elapsed*0.036, elapsed*0.01);
-                if(elapsed>10000)
+                if(elapsed>30000)
                     timer.stop();
             }, 500);
                         
