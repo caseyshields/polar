@@ -57,7 +57,6 @@ let createPolarPlot = function ( svg, parameters ) {
     // default event handlers
     let clicked = function(blip, index, selection){}; // this will be added to individual blips on the update phase
     let moved = function(){};
-    svg.on('mousemove', moved);
     // TODO add a mouse wheel event that changes the range axis?
 
     // array of polar plot blips
@@ -133,7 +132,17 @@ let createPolarPlot = function ( svg, parameters ) {
 
     plot.move = function( callback ) {
         moved = callback;
+        svg.on('mousemove', moved);
         return plot;
+    }
+
+    /** Convert screen coordinates into the coordinates of the input. */
+    plot.screen2polar = function(screen) {
+        let x = screen[0]-args.center[0];
+        let y = screen[1]-args.center[1];
+        let r = ranges.invert( Math.sqrt(x*x + y*y) );
+        let a = angles.invert( Math.atan2(y, x) );
+        return [a,r];
     }
 
     plot.center = function( point ) {

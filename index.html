@@ -8,15 +8,18 @@
                 background-color: black;
                 color: white;
             }
+            svg {
+                pointer-events: all;
+            }
             circle.spiral {
-                fill:green;
+                fill:greenyellow;
                 opacity: 0;
                 stroke: none;
-                animation: boop 4s 1 linear;
-                /* animation-name: boop;
+                animation-name: boop;
                 animation-duration: 5s;
                 animation-iteration-count: 1;
-                animation-timing-function: linear; */
+                animation-timing-function: linear;
+                /* animation: boop 4s 1 linear; */
             }
             g.raxis, g.aaxis {
                 fill: none;
@@ -34,7 +37,8 @@
         <section>
             <h1 id="title">Polar Plot Example</h1>
             <svg width="512" height="512"></svg>
-            <h3 id="info"> </h3>
+            <h3 id="coordinate"></h3>
+            <h3 id="info"></h3>
         </section>
         
         <script src="https://d3js.org/d3.v5.js"></script>
@@ -43,18 +47,18 @@
             let svg = d3.select('svg');
             let width = svg.attr("width");
             let height = svg.attr("height");
+            let coordinate = d3.select('#coordinate');
             let info = d3.select('#info');
 
             let plot = createPolarPlot(svg, {})
                 .click( function( blip, index, selection ) {
-                        info.html( JSON.stringify( blip, null, '<br>') );
+                    info.html( JSON.stringify( blip, null, '<br>') );
                 } )
                 .move( function() {
-                    console.log('movement');
-                    let point = d3.mouse(this);
-                    console.log( point );
-                    // let map = starmap.screen2polar(point);
-                    // coordinate.html( JSON.stringify( map ) );
+                    // console.log('movement');
+                    let screen = d3.mouse(this);
+                    let polar = plot.screen2polar(screen);
+                    coordinate.html( JSON.stringify( polar ) );
                 } );
             
             let timer = d3.interval( function(elapsed) {
