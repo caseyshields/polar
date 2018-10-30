@@ -1,9 +1,9 @@
 
 
-/** Factory method which returns a polar plot component
- * @param {[Number,Number]} args.center - Screen position of plot origin
- * @param {Number} args.radius - radius of plot in pixels
- * @param {Number} args.maxRange - Maximum input range
+/** Factory method which returns a polar plot component. 
+ * @param {number[]} args.center - Screen position of plot originin [x,y] order
+ * @param {number} [args.radius=250] - radius of plot in pixels
+ * @param {number} [args.maxRange=256] - Maximum input range
 */
 let createPolarPlot = function ( svg, parameters ) {
 
@@ -165,7 +165,7 @@ let createPolarPlot = function ( svg, parameters ) {
 
     /** Sets the callback for handling blips being clicked, and returns the plot object for chaining.
      * @param {d3callback} callback - a D3 style event handler
-     * @return {Object} */
+     * @return {plot} */
     plot.click = function( callback ) {
         clicked = callback;
         return plot;
@@ -206,7 +206,7 @@ let createPolarPlot = function ( svg, parameters ) {
 
     /** Sets the screen coordinates of the center of the polar plot and returns the plot object for chaining.
      * @param {number[]} point - a point in screen coordinates in [x,y] order.
-     * @return {Object} */
+     * @return {plot} */
     plot.center = function( point ) {
         args.center = point;
         plot();
@@ -218,6 +218,7 @@ let createPolarPlot = function ( svg, parameters ) {
      * @param {number} range - the range as a number between 0 and args.maxRange
      * @param {number} angle - the angle as a number between 0 and args.turn
      * @param {number} power - the blips power determines is visual size on the display
+     * @return {plot}
     */
     plot.addBlip = function( classy, range, angle, power ) {
         let blip = {
