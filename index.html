@@ -21,7 +21,7 @@
                 animation-timing-function: linear;
                 /* animation: boop 4s 1 linear; */
             }
-            g.raxis, g.aaxis {
+            g.raxis, g.aaxis, .crosshair {
                 fill: none;
                 stroke: green;
                 stroke-width: 2;
@@ -59,6 +59,7 @@
                     let screen = d3.mouse(this);
                     let polar = plot.screen2polar(screen);
                     coordinate.html( JSON.stringify( polar ) );
+                    plot.drawCrosshairs(polar);
                 } );
             
             let timer = d3.interval( function(elapsed) {

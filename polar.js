@@ -1,6 +1,4 @@
 
-// TODO add headings and rings? radar polygons? Ameobas?
-// TODO add heading vector on the blip?
 
 /** Factory method which returns a polar plot component
  * @param {number} args.centerx - Horizontal screen position of plot origin
@@ -39,16 +37,23 @@ let createPolarPlot = function ( svg, parameters ) {
         .range([0,args.maxBlip])
         .clamp(true);
     
+    // create svg groups for the different visual parts of the component
     let raxis = svg.append('g')
         .classed('raxis', true)
         .selectAll('circle');
     let aaxis = svg.append('g')
         .classed('aaxis', true)
         .selectAll('line');
-
-    let blips = svg.append('g').classed('blips', true)
+    let cross = svg.append('circle')
+        .classed('crosshair', true);
+    let hair = svg.append('line')
+        .classed('crosshair', true);
+    let blips = svg.append('g')
+        .classed('blips', true)
         .selectAll('circle');
 
+    
+    
     // default data accessors
     let getRange = function(d){return d.range;}; // range in screen units
     let getAngle = function(d){return d.angle;}; // angle in radians, with angle zero in the [0, -1] screen direction
@@ -85,6 +90,8 @@ let createPolarPlot = function ( svg, parameters ) {
                         .attr('cx', args.center[0] + r * Math.cos(a))
                         .attr('cy', args.center[1] + r * Math.sin(a));
                 });
+        // TODO add heading vector on the blip if data includes velocity?
+        // TODO apart from drawing blips we might add ameobas using the d3.lineRadial() as a path generator..
     }
 
     plot.drawGrid = function(n,m) {
@@ -125,6 +132,20 @@ let createPolarPlot = function ( svg, parameters ) {
                 .attr('y2', function(d){return Rmax*d[1]+args.center[1];})
     }
 
+    plot.drawCrosshairs = function([angle, range]) {
+        cross
+                .attr('cx', args.center[0])
+                .attr('cy', args.center[1])
+                .attr('r', range);
+
+        let heading = plot.polar2screen([angle, args.maxRange]);
+        hair
+                .attr('x1',args.center[0])
+                .attr('x2',heading[0])
+                .attr('y1',args.center[1])
+                .attr('y2',heading[1])
+    }
+
     plot.click = function( callback ) {
         clicked = callback;
         return plot;
@@ -143,6 +164,14 @@ let createPolarPlot = function ( svg, parameters ) {
         let r = ranges.invert( Math.sqrt(x*x + y*y) );
         let a = angles.invert( Math.atan2(y, x) );
         return [a,r];
+    }
+
+    plot.polar2screen = function( polar ) {
+        let a = angles( polar[0] );
+        let r = ranges( polar[1] );
+        let x = args.center[0] + r * Math.cos(a);
+        let y = args.center[1] + r * Math.sin(a);
+        return [x, y];
     }
 
     plot.center = function( point ) {
@@ -165,10 +194,6 @@ let createPolarPlot = function ( svg, parameters ) {
         return plot;
         // update bounds of the ranges or powers scales?
     }
-
-    // TODO
-    // plot.screen2polar(point) {
-    // }
 
     return plot;
 }
