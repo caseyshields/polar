@@ -1,10 +1,9 @@
 
 
 /** Factory method which returns a polar plot component
- * @param {number} args.centerx - Horizontal screen position of plot origin
- * @param {number} args.centery - Vertical screen position of plot origin
- * @param {number} args.radius - radius of plot in pixels
- * @param {D3 continuous scale} args.ranges
+ * @param {[Number,Number]} args.center - Screen position of plot origin
+ * @param {Number} args.radius - radius of plot in pixels
+ * @param {Number} args.maxRange - Maximum input range
 */
 let createPolarPlot = function ( svg, parameters ) {
 
@@ -52,8 +51,6 @@ let createPolarPlot = function ( svg, parameters ) {
         .classed('blips', true)
         .selectAll('circle');
 
-    
-    
     // default data accessors
     let getRange = function(d){return d.range;}; // range in screen units
     let getAngle = function(d){return d.angle;}; // angle in radians, with angle zero in the [0, -1] screen direction
@@ -62,17 +59,19 @@ let createPolarPlot = function ( svg, parameters ) {
     // default event handlers
     let clicked = function(blip, index, selection){}; // this will be added to individual blips on the update phase
     let moved = function(){};
+    // TODO I should really just enable mouse events for a circle containing the plot, not the entire SVG...
     // TODO add a mouse wheel event that changes the range axis?
 
     // array of polar plot blips
     let data = [];
 
-    /** redraw the polar plot in the selected SVG */
+    /** Creates/updates both the blips and grid of the polar plot */
     let plot = function() {
         plot.drawBlips();
         plot.drawGrid(args.rangeTicks, args.angleTicks);
     }
 
+    /** Creates/updates blips on the polar plot. */
     plot.drawBlips = function() {
         blips = blips.data( data );
         blips.exit()
@@ -94,6 +93,9 @@ let createPolarPlot = function ( svg, parameters ) {
         // TODO apart from drawing blips we might add ameobas using the d3.lineRadial() as a path generator..
     }
 
+    /** Draws a polar grid
+     * @param {Integer} n - Number of range graduations
+     * @param {Integer} m - Number of angle graduations */
     plot.drawGrid = function(n,m) {
         // derive incremental range distances
         let distances = [];
@@ -132,6 +134,7 @@ let createPolarPlot = function ( svg, parameters ) {
                 .attr('y2', function(d){return Rmax*d[1]+args.center[1];})
     }
 
+    /** Draws polar crosshairs if the range is within the configured maxRange, otherwise clears the crosshairs. */
     plot.drawCrosshairs = function([angle, range]) {
         if (range < args.maxRange) {
             cross.attr('r', range)
@@ -154,18 +157,32 @@ let createPolarPlot = function ( svg, parameters ) {
         } // messing with display messes up the animation timers
     }
 
+    /** @callback d3callback
+     * @param {Object} data - the data object
+     * @param {number} index - the index of the data
+     * @param {Object} selection - the D3 selection
+    */
+
+    /** Sets the callback for handling blips being clicked, and returns the plot object for chaining.
+     * @param {d3callback} callback - a D3 style event handler
+     * @return {Object} */
     plot.click = function( callback ) {
         clicked = callback;
         return plot;
     }
 
+    /** Sets the callback for handling mouse movement, and returns the plot object for chaining.
+     * @param {function} callback - A no-argument function to be called. use d3.mouse(this) to obtain the current screen coordinates
+     * @return {plot} */
     plot.move = function( callback ) {
         moved = callback;
         svg.on('mousemove', moved);
         return plot;
     }
 
-    /** Convert screen coordinates into the coordinates of the input. */
+    /** Convert screen coordinates into the coordinates of the input.
+     * @param {number[]} screen - a two element array holding screen coordinates in [x, y] order
+     * @return {number[]} */
     plot.screen2polar = function(screen) {
         let x = screen[0]-args.center[0];
         let y = screen[1]-args.center[1];
@@ -174,21 +191,34 @@ let createPolarPlot = function ( svg, parameters ) {
         return [a,r];
     }
 
+    /** Convert polar coordinates to screen coordinates.
+     * @param {number[]} polar - A two element array holding polar coordinates in [a, r] order. Units are the same as the configured input units. 
+     * @return {number[]} */
     plot.polar2screen = function( polar ) {
         let a = angles( polar[0] );
         let r = ranges( polar[1] );
         let x = args.center[0] + r * Math.cos(a);
         let y = args.center[1] + r * Math.sin(a);
         return [x, y];
-    } // TODO these are apparently not inverses of each other because of the screen to domain step- FIX!!!
+    }
+    // TODO these are not inverses of each other probably because
+    // of the screen to domain step and the angle offset- FIX!!!
 
+    /** Sets the screen coordinates of the center of the polar plot and returns the plot object for chaining.
+     * @param {number[]} point - a point in screen coordinates in [x,y] order.
+     * @return {Object} */
     plot.center = function( point ) {
         args.center = point;
         plot();
         return plot;
     }
 
-    /** Adds a blip to the display using only the required fields. */
+    /** Adds a blip to the display using only the required fields.
+     * @param {string} classy - the CSS class to apply to the blip
+     * @param {number} range - the range as a number between 0 and args.maxRange
+     * @param {number} angle - the angle as a number between 0 and args.turn
+     * @param {number} power - the blips power determines is visual size on the display
+    */
     plot.addBlip = function( classy, range, angle, power ) {
         let blip = {
             class: classy,
@@ -196,7 +226,6 @@ let createPolarPlot = function ( svg, parameters ) {
             angle: angle,
             power: power,
         };
-        // console.log(blip);
         data.push(blip);
         plot();
         return plot;
