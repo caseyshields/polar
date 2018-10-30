@@ -133,17 +133,25 @@ let createPolarPlot = function ( svg, parameters ) {
     }
 
     plot.drawCrosshairs = function([angle, range]) {
-        cross
+        if (range < args.maxRange) {
+            cross.attr('r', range)
                 .attr('cx', args.center[0])
-                .attr('cy', args.center[1])
-                .attr('r', range);
+                .attr('cy', args.center[1]);
 
-        let heading = plot.polar2screen([angle, args.maxRange]);
-        hair
-                .attr('x1',args.center[0])
+            let heading = plot.polar2screen([angle, args.maxRange]);
+            hair.attr('x1',args.center[0])
                 .attr('x2',heading[0])
                 .attr('y1',args.center[1])
-                .attr('y2',heading[1])
+                .attr('y2',heading[1]);
+        } else {
+            cross.attr('r', '')
+                .attr('cx', '')
+                .attr('cy', '');
+            hair.attr('x1','')
+                .attr('x2','')
+                .attr('y1','')
+                .attr('y2','');
+        } // messing with display messes up the animation timers
     }
 
     plot.click = function( callback ) {
@@ -172,7 +180,7 @@ let createPolarPlot = function ( svg, parameters ) {
         let x = args.center[0] + r * Math.cos(a);
         let y = args.center[1] + r * Math.sin(a);
         return [x, y];
-    }
+    } // TODO these are apparently not inverses of each other because of the screen to domain step- FIX!!!
 
     plot.center = function( point ) {
         args.center = point;

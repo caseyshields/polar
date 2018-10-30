@@ -16,20 +16,24 @@
                 opacity: 0;
                 stroke: none;
                 animation-name: boop;
-                animation-duration: 5s;
+                animation-duration: 3s;
                 animation-iteration-count: 1;
-                animation-timing-function: linear;
-                /* animation: boop 4s 1 linear; */
+                animation-timing-function: ease-out;
             }
             g.raxis, g.aaxis, .crosshair {
                 fill: none;
                 stroke: green;
                 stroke-width: 2;
+                animation: whomwhomwhom 1s infinite ease-in alternate;
             }
             @keyframes boop {
                 0%   {opacity:0.0;}
                 10%  {opacity:1.0;}
                 100% {opacity:0.0;}
+            }
+            @keyframes whomwhomwhom {
+                0% {stroke:green; stroke-width:2;}
+                100% {stroke:greenyellow; stroke-width:4;}
             }
         </style>
     </head>
@@ -55,11 +59,10 @@
                     info.html( JSON.stringify( blip, null, '<br>') );
                 } )
                 .move( function() {
-                    // console.log('movement');
-                    let screen = d3.mouse(this);
-                    let polar = plot.screen2polar(screen);
+                    let screen = d3.mouse( this );
+                    let polar = plot.screen2polar( screen );
                     coordinate.html( JSON.stringify( polar ) );
-                    plot.drawCrosshairs(polar);
+                    plot.drawCrosshairs( polar );
                 } );
             
             let timer = d3.interval( function(elapsed) {
