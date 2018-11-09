@@ -1,7 +1,8 @@
 
 
-/** Factory method which returns a polar plot component. 
- * @param {number[]} args.center - Screen position of plot originin [x,y] order
+/** Factory method which returns a polar plot component.
+ * Angle zero points to the right, and angles advance CCW.
+ * @param {number[]} args.center - Screen position of plot origin [x,y] order
  * @param {number} [args.radius=250] - radius of plot in pixels
  * @param {number} [args.maxRange=256] - Maximum input range
 */
@@ -21,6 +22,7 @@ let createPolarPlot = function ( svg, parameters ) {
         angleOffset: -Math.PI,
     };
     Object.assign(args, parameters);
+    // TODO add configuration for rotation direction
 
     // create scales for the plot axis
     let ranges = d3.scaleLinear()
@@ -50,6 +52,7 @@ let createPolarPlot = function ( svg, parameters ) {
     let blips = svg.append('g')
         .classed('blips', true)
         .selectAll('circle');
+    // TODO these need to be added in an encompassing group!!
 
     // default data accessors
     let getRange = function(d){return d.range;}; // range in screen units
@@ -87,7 +90,8 @@ let createPolarPlot = function ( svg, parameters ) {
                     let a = angles(getAngle(d));
                     d3.select(this)
                         .attr('cx', args.center[0] + r * Math.cos(a))
-                        .attr('cy', args.center[1] + r * Math.sin(a));
+                        .attr('cy', args.center[1] - r * Math.sin(a));
+                        // negate y to account for screen flip... // is there a clearer way?
                 });
         // TODO add heading vector on the blip if data includes velocity?
         // TODO apart from drawing blips we might add ameobas using the d3.lineRadial() as a path generator..
@@ -100,7 +104,7 @@ let createPolarPlot = function ( svg, parameters ) {
         // derive incremental range distances
         let distances = [];
         let dn = ranges.domain()[1] / n;
-        for (let i=1; i<=n; i++)
+        for (let i=n; i>=1; i--)
             distances.push( i*dn );
         // let ticks = ranges.ticks(n).slice(1);
 
@@ -109,6 +113,7 @@ let createPolarPlot = function ( svg, parameters ) {
         raxis = raxis.enter()
             .append('circle')
             .merge( raxis )
+                // .classed('background', true)
                 .attr('cx', args.center[0])
                 .attr('cy', args.center[1])
                 .attr('r', function(d){return ranges(d);});
@@ -220,13 +225,17 @@ let createPolarPlot = function ( svg, parameters ) {
      * @param {number} power - the blips power determines is visual size on the display
      * @return {plot}
     */
-    plot.addBlip = function( classy, range, angle, power ) {
+    plot.add = function( classy, range, angle, power ) {
         let blip = {
             class: classy,
             range: range,
             angle: angle,
             power: power,
         };
+        return plot.addBlip( blip );
+    }
+
+    plot.addBlip = function( blip ) {
         data.push(blip);
         plot();
         return plot;
