@@ -225,17 +225,17 @@ let createPolarPlot = function ( svg, parameters ) {
      * @param {number} power - the blips power determines is visual size on the display
      * @return {plot}
     */
-    plot.add = function( classy, range, angle, power ) {
+    plot.addBlip = function( classy, range, angle, power ) {
         let blip = {
             class: classy,
             range: range,
             angle: angle,
             power: power,
         };
-        return plot.addBlip( blip );
+        return plot.add( blip );
     }
 
-    plot.addBlip = function( blip ) {
+    plot.add = function( blip ) {
         data.push(blip);
         plot();
         return plot;
