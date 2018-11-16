@@ -1,8 +1,10 @@
 
+// TODO add heading vector on the blip if data includes velocity?
+// TODO apart from drawing blips we might add ameobas using the d3.lineRadial() as a path generator..
 
 /** Factory method which returns a polar plot component.
  * Angle zero points to the right, and angles advance CCW.
- * @param {number[]} args.center - Screen position of plot origin [x,y] order
+ * @param {number[]} [args.center=[250,250]] - Screen position of plot origin [x,y] order
  * @param {number} [args.radius=250] - radius of plot in pixels
  * @param {number} [args.maxRange=256] - Maximum input range
 */
@@ -54,10 +56,10 @@ let createPolarPlot = function ( svg, parameters ) {
         .selectAll('circle');
     // TODO these need to be added in an encompassing group!!
 
-    // default data accessors
-    let getRange = function(d){return d.range;}; // range in screen units
-    let getAngle = function(d){return d.angle;}; // angle in radians, with angle zero in the [0, -1] screen direction
-    let getPower = function(d){return d.power;}; // blip diameter in screen units
+    // // default data accessors
+    // let getRange = function(d){return d.range;}; // range in screen units
+    // let getAngle = function(d){return d.angle;}; // angle in radians, with angle zero in the [0, -1] screen direction
+    // let getPower = function(d){return d.power;}; // blip diameter in screen units
 
     // default event handlers
     let clicked = function(blip, index, selection){}; // this will be added to individual blips on the update phase
@@ -81,22 +83,41 @@ let createPolarPlot = function ( svg, parameters ) {
                 .remove();
         blips = blips.enter()
             .append('circle')
-                .attr('class', function(d){return d.class;} )
-                .on('click', clicked)
+                //.on('click', clicked) // I don't think this affects performance...
             .merge(blips)
-                .attr('r', function(d){return powers(getPower(d));} )
                 .each( function(d) {
-                    let r = ranges(getRange(d));
-                    let a = angles(getAngle(d));
+                    let r = ranges(d.range);//getRange(d));
+                    let a = angles(d.angle);//getAngle(d));
+                    let p = powers(d.power);//getPower(d));
                     d3.select(this)
                         .attr('cx', args.center[0] + r * Math.cos(a))
-                        .attr('cy', args.center[1] - r * Math.sin(a));
-                        // negate y to account for screen flip... // is there a clearer way?
+                        .attr('cy', args.center[1] - r * Math.sin(a)) // negate y to account for screen flip... // is there a clearer way?
+                        .attr('r', p )
+                        .classed(d.class, true);
                 });
-        // TODO add heading vector on the blip if data includes velocity?
-        // TODO apart from drawing blips we might add ameobas using the d3.lineRadial() as a path generator..
     }
-
+    // here's a version with keyed, static objects. it's actually noticably slower than everything being dynamic!
+    // At A guess, I'd say it's because altering all the SVG attributes instead of changing DOM structure is faster...
+    // plot.drawBlips = function() {
+    //     blips = blips.data( data, function(d){return d.time;} );
+    //     blips.exit()
+    //             .remove();
+    //     blips = blips.enter()
+    //         .append('circle')
+    //             .each( function(d) {
+    //                 let r = ranges(getRange(d));
+    //                 let a = angles(getAngle(d));
+    //                 let p = powers(getPower(d));
+    //                 d3.select(this)
+    //                     .attr('cx', args.center[0] + r * Math.cos(a))
+    //                     .attr('cy', args.center[1] - r * Math.sin(a)) // negate y to account for screen flip... // is there a clearer way?
+    //                     .attr('r', p )
+    //                     .classed(d.class, true);
+    //             })
+    //             .on('click', clicked)
+    //         .merge(blips);
+    // }
+    
     /** Draws a polar grid
      * @param {Integer} n - Number of range graduations
      * @param {Integer} m - Number of angle graduations */
@@ -235,12 +256,31 @@ let createPolarPlot = function ( svg, parameters ) {
         return plot.add( blip );
     }
 
+    /** Adds the given object to the Blip data. */
     plot.add = function( blip ) {
         data.push(blip);
-        plot();
+        // plot();
         return plot;
         // update bounds of the ranges or powers scales?
     }
+
+    /** Setter/getter for plot data array
+     * @param {Object[]} [arr] - sets the plot data to the given array if provided
+     * @return the plot data if no array is provided, otherwise returns the plot data for method for chaining
+     */
+    plot.blips = function( arr ) {
+        if(arr) {
+            data = arr;
+            return plot;
+        } else return data;
+    }
+
+    plot.clearBlips = function() {
+        while (data.length>0)
+            data.pop(); // TODO is there a constant time way to do this?
+        return map;
+    }
+    // TODO add time bounded clear methods? used to expire event in a stream
 
     return plot;
 }
