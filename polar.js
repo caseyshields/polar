@@ -21,7 +21,7 @@ let createPolarPlot = function ( svg, parameters ) {
         maxPower: 127,
         rangeTicks: 4,
         angleTicks: 8,
-        angleOffset: -Math.PI,
+        angleOffset: Math.PI/2.0,
     };
     Object.assign(args, parameters);
     // TODO add configuration for rotation direction
@@ -32,10 +32,10 @@ let createPolarPlot = function ( svg, parameters ) {
         .range([0, args.radius])
         .clamp(true);
     let angles = d3.scaleLinear()
-        .domain([0,args.turn])
-        .range([ args.angleOffset/2.0, 2*Math.PI + args.angleOffset/2.0 ])
+        .domain([args.turn, 0])
+        .range([ args.angleOffset, 2*Math.PI + args.angleOffset ])
         .clamp(false);
-    let powers = d3.scaleSqrt()
+    let powers = d3.scaleLinear()
         .domain([args.minPower, args.maxPower])
         .range([0,args.maxBlip])
         .clamp(true);
