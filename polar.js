@@ -4,27 +4,28 @@
 
 /** Factory method which returns a polar plot component.
  * Angle zero points to the right, and angles advance CCW.
- * @param {number[]} [args.center=[250,250]] - Screen position of plot origin [x,y] order
- * @param {number} [args.radius=250] - radius of plot in pixels
- * @param {number} [args.maxRange=256] - Maximum input range
+ * @param {number[]} [args.center=[250,250]] : Screen position of plot origin [x,y] order
+ * @param {number} [args.radius=250] : radius of plot in pixels
+ * @param {number} [args.maxRange=256] : Maximum input range
+ * @param {number} [args.turns=2*Math.PI] : Units per rotation, defaults to radians
+ * @param {number} [args.rotate=-Math.PI/2] : number or radians to rotate the scope display by 
 */
 let createPolarPlot = function ( svg, parameters ) {
 
     // initialized with defaults, then overwrite with user arguments
     let args = {
-        center: [250,250],
+        center: [250, 250],
         radius: 250,
         maxRange: 256,
-        turn: 360,
+        turn: 2*Math.PI,
+        rotate: -Math.PI/2,
         maxBlip: 10,
         minPower: -128,
         maxPower: 127,
         rangeTicks: 4,
         angleTicks: 8,
-        angleOffset: Math.PI/2.0,
     };
     Object.assign(args, parameters);
-    // TODO add configuration for rotation direction
 
     // create scales for the plot axis
     let ranges = d3.scaleLinear()
@@ -32,8 +33,8 @@ let createPolarPlot = function ( svg, parameters ) {
         .range([0, args.radius])
         .clamp(true);
     let angles = d3.scaleLinear()
-        .domain([args.turn, 0])
-        .range([ args.angleOffset, 2*Math.PI + args.angleOffset ])
+        .domain( [0,args.turn] )
+        .range( [0, 2*Math.PI] )
         .clamp(false);
     let powers = d3.scaleLinear()
         .domain([args.minPower, args.maxPower])
@@ -41,17 +42,19 @@ let createPolarPlot = function ( svg, parameters ) {
         .clamp(true);
     
     // create svg groups for the different visual parts of the component
-    let raxis = svg.append('g')
+    let group = svg.append('g')
+        .attr('class', 'scope');
+    let raxis = group.append('g')
         .classed('raxis', true)
         .selectAll('circle');
-    let aaxis = svg.append('g')
+    let aaxis = group.append('g')
         .classed('aaxis', true)
         .selectAll('line');
-    let cross = svg.append('circle')
+    let cross = group.append('circle')
         .classed('crosshair', true);
-    let hair = svg.append('line')
+    let hair = group.append('line')
         .classed('crosshair', true);
-    let blips = svg.append('g')
+    let blips = group.append('g')
         .classed('blips', true)
         .selectAll('circle');
     // TODO these need to be added in an encompassing group!!
@@ -87,7 +90,7 @@ let createPolarPlot = function ( svg, parameters ) {
             .merge(blips)
                 .each( function(d) {
                     let r = ranges(d.range);//getRange(d));
-                    let a = angles(d.angle);//getAngle(d));
+                    let a = angles(d.angle) + args.rotate;//getAngle(d));
                     let p = powers(d.power);//getPower(d));
                     d3.select(this)
                         .attr('cx', args.center[0] + r * Math.cos(a))
@@ -134,7 +137,6 @@ let createPolarPlot = function ( svg, parameters ) {
         raxis = raxis.enter()
             .append('circle')
             .merge( raxis )
-                // .classed('background', true)
                 .attr('cx', args.center[0])
                 .attr('cy', args.center[1])
                 .attr('r', function(d){return ranges(d);});
@@ -160,26 +162,29 @@ let createPolarPlot = function ( svg, parameters ) {
                 .attr('y2', function(d){return Rmax*d[1]+args.center[1];})
     }
 
-    /** Draws polar crosshairs if the range is within the configured maxRange, otherwise clears the crosshairs. */
+    /** Draws polar crosshairs if the range is within the configured maxRange, otherwise clears the crosshairs.
+     * @param angle : the angle of the crosshair, in the same units used by the data
+     * @param range : the distance from the origin, in the same units as the data
+    */
     plot.drawCrosshairs = function([angle, range]) {
         if (range < args.maxRange) {
-            cross.attr('r', range)
+            let distance = ranges(range);
+            cross.attr('r', distance)
                 .attr('cx', args.center[0])
                 .attr('cy', args.center[1]);
-
             let heading = plot.polar2screen([angle, args.maxRange]);
-            hair.attr('x1',args.center[0])
-                .attr('x2',heading[0])
-                .attr('y1',args.center[1])
-                .attr('y2',heading[1]);
+            hair.attr('x1', args.center[0])
+                .attr('x2', heading[0])
+                .attr('y1', args.center[1])
+                .attr('y2', heading[1]);
         } else {
-            cross.attr('r', '')
-                .attr('cx', '')
-                .attr('cy', '');
-            hair.attr('x1','')
-                .attr('x2','')
-                .attr('y1','')
-                .attr('y2','');
+            cross.attr('r', '0')
+                .attr('cx', '0')
+                .attr('cy', '0');
+            hair.attr('x1', '0')
+                .attr('x2', '0')
+                .attr('y1', '0')
+                .attr('y2', '0');
         } // messing with display messes up the animation timers
     }
 
@@ -212,23 +217,23 @@ let createPolarPlot = function ( svg, parameters ) {
     plot.screen2polar = function(screen) {
         let x = screen[0]-args.center[0];
         let y = screen[1]-args.center[1];
-        let r = ranges.invert( Math.sqrt(x*x + y*y) );
-        let a = angles.invert( Math.atan2(y, x) );
-        return [a,r];
+        let r = Math.sqrt(x*x + y*y);
+        let a = Math.atan2(y, x) - args.rotate;
+        let range = ranges.invert( r );
+        let angle = angles.invert( a );
+        return [angle,range];
     }
 
     /** Convert polar coordinates to screen coordinates.
      * @param {number[]} polar - A two element array holding polar coordinates in [a, r] order. Units are the same as the configured input units. 
      * @return {number[]} */
     plot.polar2screen = function( polar ) {
-        let a = angles( polar[0] );
+        let a = angles( polar[0] ) + args.rotate;
         let r = ranges( polar[1] );
         let x = args.center[0] + r * Math.cos(a);
         let y = args.center[1] + r * Math.sin(a);
         return [x, y];
     }
-    // TODO these are not inverses of each other probably because
-    // of the screen to domain step and the angle offset- FIX!!!
 
     /** Sets the screen coordinates of the center of the polar plot and returns the plot object for chaining.
      * @param {number[]} point - a point in screen coordinates in [x,y] order.
