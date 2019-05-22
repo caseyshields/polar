@@ -1,7 +1,4 @@
 
-// TODO add heading vector on the blip if data includes velocity?
-// TODO apart from drawing blips we might add ameobas using the d3.lineRadial() as a path generator..
-
 /** Factory method which returns a polar plot component.
  * Angle zero points to the right, and angles advance CCW.
  * @param {number[]} [args.center=[250,250]] : Screen position of plot origin [x,y] order
@@ -57,7 +54,6 @@ let createPolarPlot = function ( svg, parameters ) {
     let blips = group.append('g')
         .classed('blips', true)
         .selectAll('circle');
-    // TODO these need to be added in an encompassing group!!
 
     // // default data accessors
     // let getRange = function(d){return d.range;}; // range in screen units
@@ -266,14 +262,22 @@ let createPolarPlot = function ( svg, parameters ) {
     plot.add = function( blip ) {
         data.push(blip);
         return plot;
-        // update bounds of the ranges or powers scales?
-    }
+    } // TODO update bounds of the ranges or powers scales when data is added?
 
-    //TODO this is inefficient!; figure out a better way to do this, like time bounds or adding an index...
-    plot.remove = function( blip ) {
-        let index = data.findIndex( (event)=>{return event===blip} );
-        if (index!=undefined)
-            data = data.slice( index );
+    // //TODO this is inefficient!; figure out a better way to do this, like time bounds or adding an index...
+    // plot.remove = function( blip ) {
+    //     let index = data.findIndex( (event)=>{return event===blip} );
+    //     if (index!=undefined)
+    //         data = data.slice( index );
+    // }
+
+    plot.expire = function(time) {
+        let n=0;
+        while (n<data.length)
+            if (data[n].time < time)
+                n++
+            else break;
+        data = data.slice(n);
     }
 
     /** Setter/getter for plot data array
@@ -296,3 +300,6 @@ let createPolarPlot = function ( svg, parameters ) {
 
     return plot;
 }
+
+// TODO add heading vector on the blip if data includes velocity?
+// TODO apart from drawing blips we might add ameobas using the d3.lineRadial() as a path generator..
