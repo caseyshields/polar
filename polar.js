@@ -261,12 +261,19 @@ let createPolarPlot = function ( svg, parameters ) {
         return plot.add( blip );
     }
 
-    /** Adds the given object to the Blip data. */
+    /** Adds the given object to the Blip data. This method does not force a redraw because you may
+     * wish to add multiple blips per render frame.*/
     plot.add = function( blip ) {
         data.push(blip);
-        // plot();
         return plot;
         // update bounds of the ranges or powers scales?
+    }
+
+    //TODO this is inefficient!; figure out a better way to do this, like time bounds or adding an index...
+    plot.remove = function( blip ) {
+        let index = data.findIndex( (event)=>{return event===blip} );
+        if (index!=undefined)
+            data = data.slice( index );
     }
 
     /** Setter/getter for plot data array
