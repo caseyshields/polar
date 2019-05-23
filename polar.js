@@ -273,8 +273,8 @@ let createPolarPlot = function ( svg, parameters ) {
 
     plot.expire = function(time) {
         let n=0;
-        while (n<data.length)
-            if (data[n].time < time)
+        while (n < data.length)
+            if (data[n].time <= time)
                 n++
             else break;
         data = data.slice(n);
