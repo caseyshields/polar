@@ -69,6 +69,9 @@ let createPolarPlot = function ( svg, parameters ) {
     // array of polar plot blips
     let data = [];
 
+    // if not null, the polar coordinates of the scope crosshairs
+    let crosshair = null;
+
     /** Creates/updates both the blips and grid of the polar plot */
     let plot = function() {
         plot.drawBlips();
@@ -159,11 +162,13 @@ let createPolarPlot = function ( svg, parameters ) {
     }
 
     /** Draws polar crosshairs if the range is within the configured maxRange, otherwise clears the crosshairs.
-     * @param angle : the angle of the crosshair, in the same units used by the data
-     * @param range : the distance from the origin, in the same units as the data
-    */
-    plot.drawCrosshairs = function([angle, range]) {
-        if (range < args.maxRange) {
+     * @param {Number[]} polar : the angle and range of the crosshair, in the same units used by the data */
+    plot.drawCrosshairs = function( polar ) {
+        crosshair = polar;
+        if (polar) {
+            [angle, range] = polar;
+            if (range > args.maxRange)
+                return;
             let distance = ranges(range);
             cross.attr('r', distance)
                 .attr('cx', args.center[0])
@@ -183,6 +188,9 @@ let createPolarPlot = function ( svg, parameters ) {
                 .attr('y2', '0');
         } // messing with display messes up the animation timers
     }
+
+    /** @returns the polar coordinates of the crosshairs */
+    plot.getCrosshairs = function() { return crosshair; }
 
     /** @callback d3callback
      * @param {Object} data - the data object
