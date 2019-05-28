@@ -95,7 +95,7 @@ let createPolarPlot = function ( svg, parameters ) {
                         .attr('cx', args.center[0] + r * Math.cos(a))
                         .attr('cy', args.center[1] - r * Math.sin(a)) // negate y to account for screen flip... // is there a clearer way?
                         .attr('r', p )
-                        .classed(d.class, true);
+                        .attr('class', classify);
                 });
     }
     // here's a version with keyed, static objects. it's actually noticably slower than everything being dynamic!
@@ -255,12 +255,13 @@ let createPolarPlot = function ( svg, parameters ) {
      * @param {number} power - the blips power determines is visual size on the display
      * @return {plot}
     */
-    plot.addBlip = function( classy, range, angle, power ) {
+    plot.addBlip = function( time, classy, range, angle, power ) {
         let blip = {
+            time,
             class: classy,
-            range: range,
-            angle: angle,
-            power: power,
+            range,
+            angle,
+            power,
         };
         return plot.add( blip );
     }
@@ -272,6 +273,17 @@ let createPolarPlot = function ( svg, parameters ) {
         return plot;
     } // TODO update bounds of the ranges or powers scales when data is added?
 
+    // this determines the class of individual blips
+    let classify = (blip) => blip.class;
+    /** Allows the user to customize the class of individual blips. defaults to '(blip) => blip.class;' */
+    plot.classifier = function( f ) {
+        if (f) {
+            classify = f;
+            return plot;
+        }
+        return classify;
+    }
+
     // //TODO this is inefficient!; figure out a better way to do this, like time bounds or adding an index...
     // plot.remove = function( blip ) {
     //     let index = data.findIndex( (event)=>{return event===blip} );
@@ -279,6 +291,7 @@ let createPolarPlot = function ( svg, parameters ) {
     //         data = data.slice( index );
     // }
 
+    /** Removes all blips older than the given time. */
     plot.expire = function(time) {
         let n=0;
         while (n < data.length)
