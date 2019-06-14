@@ -1,4 +1,11 @@
 
+// TODO add heading vector on the blip if data includes velocity?
+// TODO apart from drawing blips we might add ameobas using the d3.lineRadial() as a path generator..
+// TODO I should really just enable mouse events for a circle containing the plot, not the entire SVG...
+// TODO add a mouse wheel event that changes the range axis?
+// TODO add customizable data accessors
+// TODO investigate a more efficient circular buffer for blips and plots
+
 /** Factory method which returns a polar plot component.
  * Angle zero points to the right, and angles advance CCW.
  * @param {number[]} [args.center=[250,250]] : Screen position of plot origin [x,y] order
@@ -47,24 +54,17 @@ let createPolarPlot = function ( svg, parameters ) {
     let aaxis = group.append('g')
         .classed('aaxis', true)
         .selectAll('line');
+    let blips = group.append('g')
+        .classed('blips', true)
+        .selectAll('circle');
     let cross = group.append('circle')
         .classed('crosshair', true);
     let hair = group.append('line')
         .classed('crosshair', true);
-    let blips = group.append('g')
-        .classed('blips', true)
-        .selectAll('circle');
-
-    // // default data accessors
-    // let getRange = function(d){return d.range;}; // range in screen units
-    // let getAngle = function(d){return d.angle;}; // angle in radians, with angle zero in the [0, -1] screen direction
-    // let getPower = function(d){return d.power;}; // blip diameter in screen units
 
     // default event handlers
-    let clicked = function(blip, index, selection){}; // this will be added to individual blips on the update phase
     let moved = function(){};
-    // TODO I should really just enable mouse events for a circle containing the plot, not the entire SVG...
-    // TODO add a mouse wheel event that changes the range axis?
+    let clicked = function(blip, index, selection){};
 
     // array of polar plot blips
     let data = [];
@@ -85,15 +85,14 @@ let createPolarPlot = function ( svg, parameters ) {
                 .remove();
         blips = blips.enter()
             .append('circle')
-                //.on('click', clicked) // I don't think this affects performance...
+                .on('click', clicked)
             .merge(blips)
                 .each( function(d) {
-                    let r = ranges(d.range);//getRange(d));
-                    let a = angles(d.angle) + args.rotate;//getAngle(d));
-                    let p = powers(d.power);//getPower(d));
+                    let screen = plot.polar2screen([d.angle, d.range]);
+                    let p = powers(d.power);
                     d3.select(this)
-                        .attr('cx', args.center[0] + r * Math.cos(a))
-                        .attr('cy', args.center[1] - r * Math.sin(a)) // negate y to account for screen flip... // is there a clearer way?
+                        .attr( 'cx', screen[0] )
+                        .attr( 'cy', screen[1] )
                         .attr('r', p )
                         .attr('class', classify);
                 });
@@ -203,6 +202,7 @@ let createPolarPlot = function ( svg, parameters ) {
      * @return {plot} */
     plot.click = function( callback ) {
         clicked = callback;
+        blips.on('click', clicked);
         return plot;
     }
 
@@ -317,10 +317,6 @@ let createPolarPlot = function ( svg, parameters ) {
             data.pop(); // TODO is there a constant time way to do this?
         return map;
     }
-    // TODO add time bounded clear methods? used to expire event in a stream
 
     return plot;
 }
-
-// TODO add heading vector on the blip if data includes velocity?
-// TODO apart from drawing blips we might add ameobas using the d3.lineRadial() as a path generator..
