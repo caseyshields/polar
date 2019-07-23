@@ -40,14 +40,14 @@
     <body>
         <section>
             <h1 id="title">Polar Plot Example</h1>
-            <svg viewBox="0 0 512 512" preserveAspectRatio="xMidYMid meet"></svg>
+            <svg viewBox="0 0 512 512" preserveAspectRatio="xMidYMid meet" width="400"></svg>
             <h3 id="coordinate"></h3>
             <h3 id="info"></h3>
         </section>
         
         <script src="https://d3js.org/d3.v5.js"></script>
-        <script src="polar.js"></script>
-        <script>
+        <script type="module">
+            import Scope from './polar.js';
             // get selections and attributes of the page's tags
             let svg = d3.select('svg');
             let width = svg.attr("width");
@@ -68,7 +68,7 @@
                 angleTicks: 12,
                 angleOffset: Math.PI/2.0,
             }
-            let plot = createPolarPlot(svg, args)
+            let plot = Scope(svg, args)
                 .click( function( blip, index, selection ) {
                     info.html( JSON.stringify( blip, null, '<br>') );
                 } )

@@ -6,6 +6,8 @@
 // TODO add customizable data accessors
 // TODO investigate a more efficient circular buffer for blips and plots
 
+export default createPolarPlot;
+
 /** Factory method which returns a polar plot component.
  * Angle zero points to the right, and angles advance CCW.
  * @param {number[]} [args.center=[250,250]] : Screen position of plot origin [x,y] order
@@ -14,7 +16,7 @@
  * @param {number} [args.turns=2*Math.PI] : Units per rotation, defaults to radians
  * @param {number} [args.rotate=-Math.PI/2] : number or radians to rotate the scope display by 
 */
-let createPolarPlot = function ( svg, parameters ) {
+function createPolarPlot( svg, parameters ) {
 
     // initialized with defaults, then overwrite with user arguments
     let args = {
@@ -165,7 +167,8 @@ let createPolarPlot = function ( svg, parameters ) {
     plot.drawCrosshairs = function( polar ) {
         crosshair = polar;
         if (polar) {
-            [angle, range] = polar;
+            let angle = polar[0];
+            let range = polar[1];//[angle, range] = polar;
             if (range > args.maxRange)
                 return;
             let distance = ranges(range);
